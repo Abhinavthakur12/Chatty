@@ -46,7 +46,7 @@ const getMyChats = TryCatch(async(req,res,next)=>{
         },[])
     };
    });
-   console.log("transformed chats hai",transformedChats)
+//    console.log("transformed chats hai",transformedChats)
     return res.status(200).json({
         success:true,
         chats:transformedChats
@@ -60,7 +60,7 @@ const getMyGroups = TryCatch(async(req,res,next)=>{
         groupChat:true,
         // creator:req.user
     }).populate("members", "name avatar")
-console.log(req.user,typeof(req.user))
+
     const groups = chats.map(({members,_id,groupChat,name})=>({
         _id,
         groupChat,
@@ -180,7 +180,6 @@ const leaveGroup = TryCatch(async(req,res,next)=>{
 const sendAttachments = TryCatch(async(req,res,next)=>{
     const {chatId} = req.body;
     const files = req.files || []
-    console.log(files)
     if(files.length < 1){
         return next(new ErrorHandler("No file attached",400))
     }
@@ -193,7 +192,7 @@ const sendAttachments = TryCatch(async(req,res,next)=>{
     ])
     if(!chat) return next(new ErrorHandler("chat not found",404))
     const attachments = await uploadFilesToCloudinary(files)
-console.log("bhai attachements hai ",attachments)
+// console.log("bhai attachements hai ",attachments)
     const messageForDB = {content:"",attachments,sender:me._id,chat:chatId}
     const messageForRealTime = {
         ...messageForDB,
@@ -259,6 +258,7 @@ const renameGroup = TryCatch(async(req,res,next)=>{
 
 const deleteChat = TryCatch(async(req,res,next)=>{
     const chatId = req.params.id
+    console.log("yha to a rha hu")
     const chat = await Chat.findById(chatId)
     if(!chat) return next(new ErrorHandler("chat not found",404))
     const members = chat.members;
@@ -274,10 +274,10 @@ const deleteChat = TryCatch(async(req,res,next)=>{
         chat:chatId,
         attachments:{$exists:true,$ne:[]}
     })
-    const public_ids = []
-    messageWithAttachments.forEach((attachments)=>
-        attachments.forEach(({public_id})=>public_ids.push(public_id))
-    );
+   const public_ids = [];
+messageWithAttachments.forEach((message) => {
+    message.attachments.forEach(({ public_id }) => public_ids.push(public_id));
+});
     await Promise.all([
         deleteFilesFromCloudinary(public_ids)
         ,chat.deleteOne(),

@@ -8,8 +8,6 @@ import { ErrorHandler } from "../utils/utility.js";
 import jwt from "jsonwebtoken"
 const adminLogin = TryCatch(async(req,res,next)=>{
     const {secretKey} = req.body
-    console.log("Received Secret Key:", secretKey);
-    console.log("Admin Secret Key from env:", adminSecretKey);
     const isMatch = secretKey === adminSecretKey
     if(!isMatch) return next(new ErrorHandler("Invalid secret key", 401));
     const token = jwt.sign(secretKey,process.env.JWT_SECRET)

@@ -78,7 +78,6 @@ io.on("connection",(socket)=>{
             message:messageForRealTime
         })
         io.to(membersSocket).emit(NEW_MESSAGE_ALERT,{chatId})
-        // console.log("NEW message ",messageForRealTime)
         try {
             await Message.create(messageForDB)
         } catch (error) {
