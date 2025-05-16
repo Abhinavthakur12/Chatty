@@ -181,7 +181,7 @@ const Chat = ({ chatId, user }) => {
                 rotate: "30deg",
                 color: orange,
                 "&:hover": {
-                  bgcolor: "rgba(255, 87, 34, 0.2)",
+                  bgcolor: "rgba(252, 122, 83, 0.2)",
                 },
               }}
               onClick={handleFileOpen}

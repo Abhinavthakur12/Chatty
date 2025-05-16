@@ -6,61 +6,86 @@ import {
   Skeleton,
   Stack,
   TextField,
-  Typography
+  Typography,
+  useTheme,
+  alpha,
+  DialogContent
 } from '@mui/material';
 import React, { useState } from 'react';
-import { sampleUsers } from '../../constants/sampleData';
-import UserItem from '../shared/UserItem';
 import { useAvailableFriendsQuery, useNewGroupMutation } from '../../redux/api/api';
 import { useAsyncMutation, useErrors } from '../../hooks/hooks';
 import { useDispatch, useSelector } from 'react-redux';
 import { setIsNewGroup } from '../../redux/reducers/misc';
 import { toast } from 'react-hot-toast';
+import UserItem from '../shared/UserItem';
 
 const NewGroup = () => {
+  const theme = useTheme();
   const { isError, isLoading, error, data } = useAvailableFriendsQuery();
   const [newGroup, isLoadingNewGroup] = useAsyncMutation(useNewGroupMutation);
   const { isNewGroup } = useSelector((state) => state.misc);
   const dispatch = useDispatch();
+  
   const [selectedMembers, setSelectedMembers] = useState([]);
   const groupName = useInputValidation("");
 
-  const errors = [
-    {
-      isError,
-      error
-    }
-  ];
+  const errors = [{ isError, error }];
   useErrors(errors);
 
   const selectMemberHandler = (id) => {
-    setSelectedMembers((prev) => prev.includes(id) ? prev.filter((currElement) => currElement !== id) : [...prev, id]);
+    setSelectedMembers((prev) => 
+      prev.includes(id) 
+        ? prev.filter((currElement) => currElement !== id) 
+        : [...prev, id]
+    );
   };
 
   const submitHandler = () => {
     if (!groupName.value) return toast.error("Group name is required");
     if (selectedMembers.length < 2) return toast.error("Group must have at least 3 members");
-    newGroup("creating new Group", { name: groupName.value, members: selectedMembers });
+    newGroup("Creating new group...", { 
+      name: groupName.value, 
+      members: selectedMembers 
+    });
     closeHandler();
   };
 
   const closeHandler = () => {
     dispatch(setIsNewGroup(false));
+    setSelectedMembers([]);
+    groupName.setValue("");
   };
 
   return (
-    <Dialog open={isNewGroup} onClose={closeHandler}>
-      <Stack p={{ xs: '1rem', sm: '3rem' }} width={'100%'} maxWidth="25rem" spacing={'2rem'} sx={{
-        backgroundColor: '#fff',
-        borderRadius: '1rem',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-      }}>
-        <DialogTitle variant='h4' textAlign={'center'} sx={{
-          fontWeight: 'bold',
-          color: '#333',
-          paddingBottom: '1rem',
-        }}>New Group</DialogTitle>
+    <Dialog 
+      open={isNewGroup} 
+      onClose={closeHandler}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          overflow: 'hidden',
+          maxHeight: '80vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }
+      }}
+    >
+      <DialogTitle 
+        sx={{
+          fontWeight: 700,
+          p: 3,
+          color: theme.palette.text.primary,
+          fontSize: '1.5rem',
+          borderBottom: `1px solid ${theme.palette.divider}`
+        }}
+      >
+        Create New Group
+      </DialogTitle>
 
+      {/* Non-scrollable section */}
+      <Stack spacing={3} p={3} sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
         <TextField
           label="Group Name"
           value={groupName.value}
@@ -68,71 +93,105 @@ const NewGroup = () => {
           fullWidth
           variant="outlined"
           sx={{
-            backgroundColor: '#f9f9f9',
-            borderRadius: '8px',
-            padding: '0.5rem',
             '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
               '& fieldset': {
-                borderColor: '#ddd',
+                borderColor: theme.palette.divider,
               },
               '&:hover fieldset': {
-                borderColor: '#888',
+                borderColor: theme.palette.primary.main,
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+                boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
               },
             },
           }}
         />
-        <Typography variant='body1' sx={{
-          color: '#444',
-          fontWeight: '600',
-        }}>Members</Typography>
-        <Stack>
-          {isLoading ? (<Skeleton variant="rectangular" width="100%" height={60} />) : (
-            data?.friends?.map((i) => (
+
+        <Typography 
+          variant='subtitle1'
+          sx={{
+            color: theme.palette.text.primary,
+            fontWeight: 600,
+          }}
+        >
+          Select Members
+        </Typography>
+      </Stack>
+
+      {/* Scrollable members list */}
+      <DialogContent dividers sx={{ p: 0, flex: 1, overflowY: 'auto' }}>
+        <Stack spacing={1} p={3}>
+          {isLoading ? (
+            <Stack spacing={1}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton 
+                  key={i} 
+                  variant="rounded" 
+                  width="100%" 
+                  height={68} 
+                  sx={{ borderRadius: 2 }}
+                />
+              ))}
+            </Stack>
+          ) : (
+            data?.friends?.map((user) => (
               <UserItem
-                user={i}
-                key={i._id}
+                key={user._id}
+                user={user}
                 handler={selectMemberHandler}
-                isAdded={selectedMembers.includes(i._id)}
+                isAdded={selectedMembers.includes(user._id)}
                 styling={{
-                  backgroundColor: selectedMembers.includes(i._id) ? '#E3F2FD' : 'transparent',
-                  borderRadius: '8px',
-                  padding: '0.75rem',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  marginBottom: '0.5rem',
+                  backgroundColor: selectedMembers.includes(user._id) 
+                    ? alpha(theme.palette.primary.main, 0.1)
+                    : 'transparent',
+                  borderRadius: 2,
+                  p: 1.5,
+                  transition: 'all 0.2s ease',
+                  border: `1px solid ${selectedMembers.includes(user._id) 
+                    ? theme.palette.primary.main 
+                    : theme.palette.divider}`,
                 }}
               />
             ))
           )}
         </Stack>
+      </DialogContent>
 
-        <Stack direction={'row'} justifyContent={'space-between'} sx={{ marginTop: '2rem' }}>
-          <Button variant='text' color='error' onClick={closeHandler} sx={{
-            fontWeight: '600',
-            textTransform: 'none',
-          }}>
-            Cancel
-          </Button>
-          <Button
-            variant='contained'
-            onClick={submitHandler}
-            disabled={isLoadingNewGroup}
-            sx={{
-              backgroundColor: '#3f51b5',
-              color: 'white',
-              textTransform: 'none',
-              padding: '0.75rem 2rem',
-              '&:hover': {
-                backgroundColor: '#303f9f',
-              },
-              '&:disabled': {
-                backgroundColor: '#b0bec5',
-                color: '#e0e0e0',
-              },
-            }}
-          >
-            Create
-          </Button>
-        </Stack>
+      {/* Fixed footer */}
+      <Stack 
+        direction='row' 
+        justifyContent='flex-end'
+        spacing={2}
+        sx={{ 
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`
+        }}
+      >
+        <Button
+          variant='text'
+          onClick={closeHandler}
+          sx={{
+            fontWeight: 600,
+            color: theme.palette.text.secondary,
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant='contained'
+          onClick={submitHandler}
+          disabled={isLoadingNewGroup}
+          sx={{
+            fontWeight: 600,
+            px: 3,
+            py: 1,
+            borderRadius: 2,
+          }}
+        >
+          {isLoadingNewGroup ? 'Creating...' : 'Create Group'}
+        </Button>
       </Stack>
     </Dialog>
   );

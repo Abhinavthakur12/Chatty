@@ -117,7 +117,7 @@ const Login = () => {
           <form onSubmit={isLogin ? handleLogin : handleSignUp}>
             {!isLogin && (
               <>
-                <Stack position="relative" width="6rem" mx="auto" mt={1} mb={2}>
+                <Stack position="relative" width="6rem" mx="auto" mt={1} mb={1}>
                   <Avatar
                     src={avatar.preview}
                     sx={{
@@ -196,7 +196,7 @@ const Login = () => {
               variant="contained"
               disabled={isLoading}
               sx={{
-                mt: 2,
+                mt: 1,
                 textTransform: 'none',
                 fontWeight: 'bold',
                 backgroundColor: '#1976d2',
@@ -206,7 +206,7 @@ const Login = () => {
               {isLogin ? "Login" : "Sign Up"}
             </Button>
 
-            <Typography textAlign="center" mt={2} mb={1}>or</Typography>
+            <Typography textAlign="center" mt={1} mb={1}>or</Typography>
 
             <Button
               fullWidth
